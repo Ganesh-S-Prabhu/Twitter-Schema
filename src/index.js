@@ -10,7 +10,9 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/users", usersController);
+app.post("/register", register); //for creating new user
+
+app.post("/login", login); // for login into the website
 app.use("/tweet" , postController );
 app.use("/reply", commentController);
 
@@ -18,14 +20,14 @@ app.use("/reply", commentController);
 
 
 
-app.listen(6000, async () => {
+app.listen(9000, async () => {
   try {
     await connect();
   } catch (err) {
     console.log(err);
   }
 
-  console.log("listening on port 6000");
+  console.log(`listening on port 9000`);
 });
 
 module.exports = app

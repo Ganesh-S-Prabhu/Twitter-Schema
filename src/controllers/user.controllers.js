@@ -1,55 +1,57 @@
+// Registration of the user
+// Login of the user
 
-const express = require("express");
-const User = require("../models/user.model");
+const User = require("../models/user.model")
+const jwt = require('jsonwebtoken');
+require('dotenv').config()
 
-
-const router = express.Router();
-
-router.get("" , async (req,res) => {
+const generateToken = (user) => {
+    return jwt.sign({user}, process.env.SECRET_KEY)
+}
+const register = async (req, res) => {
     try{
-        const user = await User.find().lean().exec();
-        return res.status(200).send(user);
-    }catch(err){
-        return res.status(500).send({Error:err.message});
-    }
+        let user = await User.findOne({$or: [{ email: req.body.email },{ mobileno: req.body.mobileno}]}).lean().exec();
    
-});
 
-router.post("" , async (req,res) => {
-    try{
-      const user = await User.create(req.body);
-      return res.status(201).send(user);
-    }catch(err){
-      return res.status(400).send({message:err.message});
+        //checking email
+        if(user){
+            return res.status(401).send({message : "Email already exists" })
+        }
+
+        // if new user, create it or allow to register;
+        user = await User.create(req.body);
+
+        const token = generateToken(user)
+        return res.status(201).send({user, token});
     }
-});
+    catch(err){
+        res.status(401).send({messages : err.message})
+    }
+}
 
-router.get("/:id" , async (req,res) => {
-  try{
-    const user = await User.findOne(req.body.id).lean().exec();
-    return res.status(200).send(user);
-  }catch(err){
-    return res.status(500).send({message:err.message});
-  }
-});
 
-router.patch("/:id" , async (req,res) => {
-  try{
-    const user = await User.findByIdAndUpdate(req.params.id,req.body,{
-      new:true
-    }).lean().exec();
-    return res.status(200).send({user:user});
-  }catch(err){
-    return res.status(500).send({message:err.message});
-  }
-});
-router.delete("/:id" , async (req,res) => {
-  try{
-    const user = await User.findByIdAndDelete(req.params.id).lean().exec();
-    return res.status(200).send(user);
-  }catch(err){
-    return res.status(500).send({message:err.message});
-  }
-});
+const login = async (req, res) => {
+    try{
+        
+        const user = await User.findOne({mobileno : req.body.mobileno})
+        //checked if mail exists
+        
 
-module.exports=router;
+        // if it matches
+        if(user){
+            const token = generateToken(user)
+            return res.status(201).send({user, token});
+        }
+        else{
+            res.status(401).send({message : "not Found"});
+        }
+
+
+    }
+    catch(err){
+        res.status(401).send({message : err.message})
+    }
+}
+
+module.exports = {register,login}
+

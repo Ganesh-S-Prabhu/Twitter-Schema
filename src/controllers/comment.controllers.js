@@ -7,16 +7,11 @@ const Comment = require("../models/comment.model");
 
 const router = express.Router();
 
-// COMMENTS CRUD
+//getting all comment
 router.get("", async (req, res) => {
   try {
     const comments = await Comment.find()
-      .populate({
-        path: "postId",
-        select: ["title"],
-        populate: { path: "userId", select: ["firstName"] },
-      })
-      .populate({ path: "userId", select: ["firstName"] })
+      .populate(postId).populate(userId)
       .lean()
       .exec();
 
@@ -25,6 +20,9 @@ router.get("", async (req, res) => {
     return res.status(500).send({ message: err.message });
   }
 });
+
+
+//creating a comment
 router.post("", async (req, res) => {
     try {
       const comments = await Comment.create(req.body);
@@ -35,16 +33,12 @@ router.post("", async (req, res) => {
   });
 
 
-
+//getting a comment by it's id
 router.get("/:id", async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id)
-      .populate({
-        path: "postId",
-        select: ["title", "body"],
-        populate: { path: "userId", select: ["password", "firstName"] },
-      })
-      .populate({ path: "userId", select: ["firstName"] })
+      .populate(postId)
+      .populate(userId)
       .lean()
       .exec();
 
@@ -54,17 +48,14 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+//updating the comment by it's id
 router.patch("/:id", async (req, res) => {
   try {
     const comment = await Comment.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     })
-      .populate({
-        path: "postId",
-        select: ["title"],
-        populate: { path: "userId", select: ["firstName"] },
-      })
-      .populate({ path: "userId", select: ["email"] })
+      .populate(postId)
+      .populate(userId)
       .lean()
       .exec();
 
@@ -74,6 +65,8 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+
+//delete the comment by its id
 router.delete("/:id", async (req, res) => {
     try {
       const comments = await Comment.findByIdAndDelete(req.params.id).lean().exec();
